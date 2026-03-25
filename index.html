@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Airport Parking - Park Your Car</title>
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="game-container">
+    <header class="header">
+      <h1 class="header-title">🅿️ Airport Parking Game</h1>
+      <p class="header-subtitle">Park your car to book your space!</p>
+    </header>
+
+    <!-- Step 1: Select Airport -->
+    <div class="step active" id="step-airport">
+      <h2 class="step-title">🎯 Choose Your Airport Car Park</h2>
+      <div class="airport-grid">
+        <button class="airport-card" data-airport="LHR">
+          <div class="airport-icon">🅿️</div>
+          <div class="airport-name">Heathrow</div>
+        </button>
+        <button class="airport-card" data-airport="LGW">
+          <div class="airport-icon">🅿️</div>
+          <div class="airport-name">Gatwick</div>
+        </button>
+        <button class="airport-card" data-airport="MAN">
+          <div class="airport-icon">🅿️</div>
+          <div class="airport-name">Manchester</div>
+        </button>
+        <button class="airport-card" data-airport="STN">
+          <div class="airport-icon">🅿️</div>
+          <div class="airport-name">Stansted</div>
+        </button>
+        <button class="airport-card" data-airport="BHX">
+          <div class="airport-icon">🅿️</div>
+          <div class="airport-name">Birmingham</div>
+        </button>
+        <button class="airport-card" data-airport="EDI">
+          <div class="airport-icon">🅿️</div>
+          <div class="airport-name">Edinburgh</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: Drop-off Date (Park Your Car) -->
+    <div class="step" id="step-dropoff">
+      <h2 class="step-title">🚗 Park Your Car - Choose Drop-off Date</h2>
+      <p class="step-subtitle">Click a parking space to park your car!</p>
+
+      <div class="car-park">
+        <div class="car" id="car-dropoff">🚗</div>
+        <div class="parking-calendar" id="dropoff-calendar"></div>
+      </div>
+    </div>
+
+    <!-- Step 3: Drop-off Time -->
+    <div class="step" id="step-dropoff-time">
+      <h2 class="step-title">⏰ Choose Your Arrival Time</h2>
+      <p class="step-subtitle">Select your parking bay time</p>
+
+      <div class="time-bays">
+        <button class="time-bay" data-time="00:00">Bay 00:00</button>
+        <button class="time-bay" data-time="01:00">Bay 01:00</button>
+        <button class="time-bay" data-time="02:00">Bay 02:00</button>
+        <button class="time-bay" data-time="03:00">Bay 03:00</button>
+        <button class="time-bay" data-time="04:00">Bay 04:00</button>
+        <button class="time-bay" data-time="05:00">Bay 05:00</button>
+        <button class="time-bay" data-time="06:00">Bay 06:00</button>
+        <button class="time-bay" data-time="07:00">Bay 07:00</button>
+        <button class="time-bay" data-time="08:00">Bay 08:00</button>
+        <button class="time-bay" data-time="09:00">Bay 09:00</button>
+        <button class="time-bay" data-time="10:00">Bay 10:00</button>
+        <button class="time-bay" data-time="11:00">Bay 11:00</button>
+        <button class="time-bay" data-time="12:00">Bay 12:00</button>
+        <button class="time-bay" data-time="13:00">Bay 13:00</button>
+        <button class="time-bay" data-time="14:00">Bay 14:00</button>
+        <button class="time-bay" data-time="15:00">Bay 15:00</button>
+        <button class="time-bay" data-time="16:00">Bay 16:00</button>
+        <button class="time-bay" data-time="17:00">Bay 17:00</button>
+        <button class="time-bay" data-time="18:00">Bay 18:00</button>
+        <button class="time-bay" data-time="19:00">Bay 19:00</button>
+        <button class="time-bay" data-time="20:00">Bay 20:00</button>
+        <button class="time-bay" data-time="21:00">Bay 21:00</button>
+        <button class="time-bay" data-time="22:00">Bay 22:00</button>
+        <button class="time-bay" data-time="23:00">Bay 23:00</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Collection Date -->
+    <div class="step" id="step-collection">
+      <h2 class="step-title">🔙 Choose Collection Date</h2>
+      <p class="step-subtitle">When will you pick up your car?</p>
+
+      <div class="car-park">
+        <div class="car" id="car-collection">🚗</div>
+        <div class="parking-calendar" id="collection-calendar"></div>
+      </div>
+    </div>
+
+    <!-- Step 5: Collection Time -->
+    <div class="step" id="step-collection-time">
+      <h2 class="step-title">⏰ Choose Your Collection Time</h2>
+      <p class="step-subtitle">Select your pickup bay time</p>
+
+      <div class="time-bays">
+        <button class="time-bay" data-time="00:00">Bay 00:00</button>
+        <button class="time-bay" data-time="01:00">Bay 01:00</button>
+        <button class="time-bay" data-time="02:00">Bay 02:00</button>
+        <button class="time-bay" data-time="03:00">Bay 03:00</button>
+        <button class="time-bay" data-time="04:00">Bay 04:00</button>
+        <button class="time-bay" data-time="05:00">Bay 05:00</button>
+        <button class="time-bay" data-time="06:00">Bay 06:00</button>
+        <button class="time-bay" data-time="07:00">Bay 07:00</button>
+        <button class="time-bay" data-time="08:00">Bay 08:00</button>
+        <button class="time-bay" data-time="09:00">Bay 09:00</button>
+        <button class="time-bay" data-time="10:00">Bay 10:00</button>
+        <button class="time-bay" data-time="11:00">Bay 11:00</button>
+        <button class="time-bay" data-time="12:00">Bay 12:00</button>
+        <button class="time-bay" data-time="13:00">Bay 13:00</button>
+        <button class="time-bay" data-time="14:00">Bay 14:00</button>
+        <button class="time-bay" data-time="15:00">Bay 15:00</button>
+        <button class="time-bay" data-time="16:00">Bay 16:00</button>
+        <button class="time-bay" data-time="17:00">Bay 17:00</button>
+        <button class="time-bay" data-time="18:00">Bay 18:00</button>
+        <button class="time-bay" data-time="19:00">Bay 19:00</button>
+        <button class="time-bay" data-time="20:00">Bay 20:00</button>
+        <button class="time-bay" data-time="21:00">Bay 21:00</button>
+        <button class="time-bay" data-time="22:00">Bay 22:00</button>
+        <button class="time-bay" data-time="23:00">Bay 23:00</button>
+      </div>
+    </div>
+
+    <!-- Final: Search -->
+    <div class="step" id="step-search">
+      <h2 class="step-title">✅ Car Parked!</h2>
+      <div class="summary">
+        <div class="summary-item">
+          <span class="summary-icon">🅿️</span>
+          <div>
+            <div class="summary-label">Airport</div>
+            <div class="summary-value" id="summary-airport"></div>
+          </div>
+        </div>
+        <div class="summary-item">
+          <span class="summary-icon">🚗</span>
+          <div>
+            <div class="summary-label">Drop-off</div>
+            <div class="summary-value" id="summary-dropoff"></div>
+          </div>
+        </div>
+        <div class="summary-item">
+          <span class="summary-icon">🔙</span>
+          <div>
+            <div class="summary-label">Collection</div>
+            <div class="summary-value" id="summary-collection"></div>
+          </div>
+        </div>
+      </div>
+      <button class="search-btn" id="searchBtn">🔍 Find Parking Spaces</button>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

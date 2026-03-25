@@ -217,55 +217,113 @@ body {
   margin-top: 4px;
 }
 
-/* Calendar Controls */
-.calendar-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 10px;
+/* Lift Floor Picker */
+.lift-picker {
+  margin-bottom: 30px;
 }
 
-.month-btn {
-  background: #c74c28;
+.lift-shaft {
+  background: linear-gradient(180deg, #34495e 0%, #2c3e50 100%);
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.3);
+}
+
+.lift-label {
+  font-size: 18px;
+  font-weight: 700;
   color: #fff;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  font-family: 'Ubuntu', Arial, sans-serif;
-  transition: all 0.3s;
-  font-size: 14px;
+  text-align: center;
+  margin-bottom: 15px;
+  text-shadow: 0 2px 4px rgba(0,0,0,.3);
 }
 
-.month-btn:hover {
-  background: #d9653a;
-  transform: translateY(-2px);
+.lift-floors {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.lift-floor {
+  background: #fff;
+  border: 2px solid #bdc3c7;
+  border-radius: 8px;
+  padding: 12px 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Ubuntu', Arial, sans-serif;
+}
+
+.lift-floor:hover {
+  border-color: #c74c28;
+  background: #fff5f2;
+  transform: translateY(-3px);
   box-shadow: 0 4px 12px rgba(199, 76, 40, 0.3);
 }
 
-.month-btn:active {
-  transform: translateY(0);
+.lift-floor.selected {
+  background: linear-gradient(135deg, #c74c28 0%, #d9653a 100%);
+  border-color: #c74c28;
+  color: #fff;
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(199, 76, 40, 0.4);
 }
 
-.month-btn:disabled {
-  background: #bdc3c7;
-  cursor: not-allowed;
-  opacity: 0.6;
+.lift-floor.selected .floor-number,
+.lift-floor.selected .floor-label {
+  color: #fff;
 }
 
-.month-btn:disabled:hover {
-  transform: none;
-  box-shadow: none;
-}
-
-.current-month {
-  font-size: 18px;
+.floor-number {
+  font-size: 20px;
   font-weight: 700;
   color: #2c3e50;
+}
+
+.floor-label {
+  font-size: 10px;
+  color: #7f8c8d;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.lift-indicator {
+  background: #1a1a2e;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.lift-arrow {
+  font-size: 20px;
+  color: #c74c28;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  50% {
+    opacity: 0.6;
+    transform: translateX(5px);
+  }
+}
+
+#currentFloorLabel {
+  font-size: 16px;
+  font-weight: 700;
+  color: #face3f;
   font-family: 'Ubuntu', Arial, sans-serif;
 }
 
@@ -410,16 +468,28 @@ body {
     font-size: 14px;
   }
 
-  .calendar-controls {
-    padding: 10px;
+  .lift-floors {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
   }
 
-  .month-btn {
-    padding: 8px 12px;
-    font-size: 12px;
+  .lift-floor {
+    padding: 10px 6px;
   }
 
-  .current-month {
+  .floor-number {
+    font-size: 18px;
+  }
+
+  .floor-label {
+    font-size: 9px;
+  }
+
+  .lift-label {
+    font-size: 16px;
+  }
+
+  #currentFloorLabel {
     font-size: 14px;
   }
 }

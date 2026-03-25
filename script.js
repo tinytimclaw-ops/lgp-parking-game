@@ -194,40 +194,68 @@ function nextStep() {
 
 function generateCalendar(containerId, dateField, minDays = 1) {
   const wrapper = document.getElementById(containerId).parentElement;
-  const existingControls = wrapper.querySelector('.calendar-controls');
+  const existingLift = wrapper.querySelector('.lift-picker');
   const existingCalendar = document.getElementById(containerId);
 
-  // Remove old controls if they exist
-  if (existingControls) {
-    existingControls.remove();
+  // Remove old lift picker if it exists
+  if (existingLift) {
+    existingLift.remove();
   }
 
-  // Add month navigation controls
-  const controls = document.createElement('div');
-  controls.className = 'calendar-controls';
-  controls.innerHTML = `
-    <button class="month-btn" id="prevMonth">← Previous Month</button>
-    <span class="current-month" id="currentMonthLabel"></span>
-    <button class="month-btn" id="nextMonth">Next Month →</button>
+  // Add lift-style floor picker for months
+  const liftPicker = document.createElement('div');
+  liftPicker.className = 'lift-picker';
+
+  // Generate 12 months (floors)
+  const today = new Date();
+  let floorsHTML = '';
+  for (let i = 0; i < 12; i++) {
+    const monthDate = new Date(today.getFullYear(), today.getMonth() + i, 1);
+    const monthName = monthDate.toLocaleDateString('en', { month: 'short', year: 'numeric' });
+    const floorNumber = i + 1;
+    const isSelected = i === state.currentMonth ? 'selected' : '';
+    floorsHTML += `
+      <button class="lift-floor ${isSelected}" data-floor="${i}">
+        <span class="floor-number">${floorNumber}</span>
+        <span class="floor-label">${monthName}</span>
+      </button>
+    `;
+  }
+
+  liftPicker.innerHTML = `
+    <div class="lift-shaft">
+      <div class="lift-label">🛗 Select Floor (Month)</div>
+      <div class="lift-floors">
+        ${floorsHTML}
+      </div>
+      <div class="lift-indicator">
+        <span class="lift-arrow">▶</span>
+        <span id="currentFloorLabel">Floor 1</span>
+      </div>
+    </div>
   `;
-  wrapper.insertBefore(controls, existingCalendar);
+
+  wrapper.insertBefore(liftPicker, existingCalendar);
 
   // Generate calendar
   renderCalendar(containerId, dateField, minDays);
 
-  // Add month navigation listeners
-  document.getElementById('prevMonth').addEventListener('click', () => {
-    if (state.currentMonth > 0) {
-      state.currentMonth--;
+  // Add floor button listeners
+  wrapper.querySelectorAll('.lift-floor').forEach(floor => {
+    floor.addEventListener('click', () => {
+      const floorNum = parseInt(floor.dataset.floor);
+      state.currentMonth = floorNum;
       state.carPosition = 0;
-      renderCalendar(containerId, dateField, minDays);
-    }
-  });
 
-  document.getElementById('nextMonth').addEventListener('click', () => {
-    state.currentMonth++;
-    state.carPosition = 0;
-    renderCalendar(containerId, dateField, minDays);
+      // Update selected floor
+      wrapper.querySelectorAll('.lift-floor').forEach(f => f.classList.remove('selected'));
+      floor.classList.add('selected');
+
+      // Update indicator
+      document.getElementById('currentFloorLabel').textContent = `Floor ${floorNum + 1}`;
+
+      renderCalendar(containerId, dateField, minDays);
+    });
   });
 }
 

@@ -344,57 +344,53 @@ function updateProgress() {
 function animateCarThroughLift(targetFloor, containerId, dateField, minDays) {
   state.liftTraveling = true;
 
-  const car = document.getElementById(state.activeCalendar.replace('-calendar', ''));
   const liftShaft = document.querySelector('.lift-shaft');
+  const liftIndicator = document.querySelector('.lift-indicator');
 
-  if (!car || !liftShaft) {
+  if (!liftShaft) {
     // Fallback if elements not found
     state.currentMonth = targetFloor;
     state.carPosition = 0;
     renderCalendar(containerId, dateField, minDays);
+    setTimeout(() => updateCarPosition(), 100);
     state.liftTraveling = false;
     return;
   }
 
-  // Step 1: Car drives into lift (move to center of lift shaft)
-  car.classList.add('driving-to-lift');
-  const liftRect = liftShaft.getBoundingClientRect();
-  const carRect = car.getBoundingClientRect();
-  const offsetX = liftRect.left + liftRect.width / 2 - carRect.left - carRect.width / 2;
-  const offsetY = liftRect.top + liftRect.height / 2 - carRect.top - carRect.height / 2;
+  // Show car icon in lift indicator
+  if (liftIndicator) {
+    const carIcon = document.createElement('span');
+    carIcon.className = 'lift-car-icon';
+    carIcon.textContent = '🚗';
+    liftIndicator.appendChild(carIcon);
+  }
 
-  car.style.transition = 'all 0.8s ease';
-  car.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(0.8)`;
+  // Lift travels with animation
+  liftShaft.classList.add('traveling');
 
-  // Step 2: After car enters lift, make lift "travel" with pulsing animation
   setTimeout(() => {
-    car.classList.remove('driving-to-lift');
-    car.classList.add('in-lift');
-    liftShaft.classList.add('traveling');
+    // Update month and render new calendar
+    state.currentMonth = targetFloor;
+    state.carPosition = 0;
+    renderCalendar(containerId, dateField, minDays);
 
-    // Step 3: After lift travels, update month and render calendar
     setTimeout(() => {
-      state.currentMonth = targetFloor;
-      state.carPosition = 0;
-      renderCalendar(containerId, dateField, minDays);
+      // Remove traveling animation
+      liftShaft.classList.remove('traveling');
 
-      // Step 4: Car drives out of lift onto calendar
+      // Remove car icon from lift
+      const carIcon = liftIndicator?.querySelector('.lift-car-icon');
+      if (carIcon) {
+        carIcon.remove();
+      }
+
+      // Position car on calendar
       setTimeout(() => {
-        liftShaft.classList.remove('traveling');
-        car.classList.remove('in-lift');
-        car.classList.add('exiting-lift');
-        car.style.transition = 'all 0.6s ease';
-        car.style.transform = '';
-
-        // Step 5: Position car at first available space
-        setTimeout(() => {
-          car.classList.remove('exiting-lift');
-          updateCarPosition();
-          state.liftTraveling = false;
-        }, 600);
-      }, 200);
-    }, 1200); // Lift travel time
-  }, 800); // Time to drive into lift
+        updateCarPosition();
+        state.liftTraveling = false;
+      }, 300);
+    }, 300);
+  }, 1500); // Lift travel time
 }
 
 function submitSearch() {

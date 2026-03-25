@@ -5,7 +5,10 @@ const state = {
   outTime: '06:00',
   inDate: null,
   inTime: '12:00',
-  currentStep: 1
+  currentStep: 1,
+  currentMonth: 0, // Months from today
+  carPosition: 0, // Position in calendar grid (0-34)
+  activeCalendar: null
 };
 
 // Airport names
@@ -60,7 +63,102 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Search button
   document.getElementById('searchBtn').addEventListener('click', submitSearch);
+
+  // Keyboard controls
+  document.addEventListener('keydown', handleKeyboard);
 });
+
+function handleKeyboard(e) {
+  if (!state.activeCalendar) return;
+
+  const key = e.key;
+  let newPosition = state.carPosition;
+
+  if (key === 'ArrowLeft') {
+    newPosition = Math.max(0, state.carPosition - 1);
+    e.preventDefault();
+  } else if (key === 'ArrowRight') {
+    newPosition = Math.min(34, state.carPosition + 1);
+    e.preventDefault();
+  } else if (key === 'ArrowUp') {
+    newPosition = Math.max(0, state.carPosition - 7);
+    e.preventDefault();
+  } else if (key === 'ArrowDown') {
+    newPosition = Math.min(34, state.carPosition + 7);
+    e.preventDefault();
+  } else if (key === 'Enter' || key === ' ') {
+    parkCar();
+    e.preventDefault();
+    return;
+  } else {
+    return;
+  }
+
+  state.carPosition = newPosition;
+  updateCarPosition();
+}
+
+function updateCarPosition() {
+  const container = document.getElementById(state.activeCalendar);
+  const spaces = container.querySelectorAll('.parking-space');
+  const targetSpace = spaces[state.carPosition];
+
+  if (!targetSpace) return;
+
+  const carId = state.activeCalendar === 'dropoff-calendar' ? 'car-dropoff' : 'car-collection';
+  const car = document.getElementById(carId);
+
+  // Remove highlight from all spaces
+  spaces.forEach(s => s.classList.remove('highlighted'));
+
+  // Highlight current space
+  if (!targetSpace.classList.contains('disabled')) {
+    targetSpace.classList.add('highlighted');
+  }
+
+  // Move car to space
+  const spaceRect = targetSpace.getBoundingClientRect();
+  const containerRect = container.getBoundingClientRect();
+
+  car.style.left = `${spaceRect.left - containerRect.left + spaceRect.width / 2}px`;
+  car.style.top = `${spaceRect.top - containerRect.top + spaceRect.height / 2}px`;
+  car.style.transform = 'translate(-50%, -50%)';
+}
+
+function parkCar() {
+  const container = document.getElementById(state.activeCalendar);
+  const spaces = container.querySelectorAll('.parking-space');
+  const targetSpace = spaces[state.carPosition];
+
+  if (!targetSpace || targetSpace.classList.contains('disabled')) return;
+
+  const dateField = state.activeCalendar === 'dropoff-calendar' ? 'outDate' : 'inDate';
+  const dateStr = targetSpace.dataset.date;
+
+  if (dateField === 'inDate' && state.outDate) {
+    const selectedDate = new Date(dateStr);
+    const outDateObj = new Date(state.outDate);
+    if (selectedDate < outDateObj) {
+      return; // Don't allow collection before drop-off
+    }
+  }
+
+  state[dateField] = dateStr;
+
+  const carId = state.activeCalendar === 'dropoff-calendar' ? 'car-dropoff' : 'car-collection';
+  const car = document.getElementById(carId);
+  car.classList.add('parked');
+
+  // Mark as selected
+  container.querySelectorAll('.parking-space').forEach(s => s.classList.remove('selected', 'highlighted'));
+  targetSpace.classList.add('selected');
+
+  setTimeout(() => {
+    car.classList.remove('parked');
+    state.activeCalendar = null;
+    nextStep();
+  }, 800);
+}
 
 function nextStep() {
   state.currentStep++;
@@ -71,14 +169,20 @@ function nextStep() {
   // Show next step
   if (state.currentStep === 2) {
     document.getElementById('step-dropoff').classList.add('active');
-    generateCalendar('dropoff-calendar', 'outDate', 1, 30);
+    state.currentMonth = 0;
+    state.carPosition = 0;
+    state.activeCalendar = 'dropoff-calendar';
+    generateCalendar('dropoff-calendar', 'outDate', 1);
   } else if (state.currentStep === 3) {
     document.getElementById('step-dropoff-time').classList.add('active');
   } else if (state.currentStep === 4) {
     document.getElementById('step-collection').classList.add('active');
+    state.currentMonth = 0;
+    state.carPosition = 0;
+    state.activeCalendar = 'collection-calendar';
     const minDate = state.outDate ? new Date(state.outDate) : new Date();
     const minDays = Math.ceil((minDate - new Date()) / (1000 * 60 * 60 * 24)) + 1;
-    generateCalendar('collection-calendar', 'inDate', minDays, 60);
+    generateCalendar('collection-calendar', 'inDate', minDays);
   } else if (state.currentStep === 5) {
     document.getElementById('step-collection-time').classList.add('active');
   } else if (state.currentStep === 6) {
@@ -88,69 +192,112 @@ function nextStep() {
   updateProgress();
 }
 
-function generateCalendar(containerId, dateField, startDays, totalDays) {
+function generateCalendar(containerId, dateField, minDays = 1) {
+  const wrapper = document.getElementById(containerId).parentElement;
+  const existingControls = wrapper.querySelector('.calendar-controls');
+  const existingCalendar = document.getElementById(containerId);
+
+  // Remove old controls if they exist
+  if (existingControls) {
+    existingControls.remove();
+  }
+
+  // Add month navigation controls
+  const controls = document.createElement('div');
+  controls.className = 'calendar-controls';
+  controls.innerHTML = `
+    <button class="month-btn" id="prevMonth">← Previous Month</button>
+    <span class="current-month" id="currentMonthLabel"></span>
+    <button class="month-btn" id="nextMonth">Next Month →</button>
+  `;
+  wrapper.insertBefore(controls, existingCalendar);
+
+  // Generate calendar
+  renderCalendar(containerId, dateField, minDays);
+
+  // Add month navigation listeners
+  document.getElementById('prevMonth').addEventListener('click', () => {
+    if (state.currentMonth > 0) {
+      state.currentMonth--;
+      state.carPosition = 0;
+      renderCalendar(containerId, dateField, minDays);
+    }
+  });
+
+  document.getElementById('nextMonth').addEventListener('click', () => {
+    state.currentMonth++;
+    state.carPosition = 0;
+    renderCalendar(containerId, dateField, minDays);
+  });
+}
+
+function renderCalendar(containerId, dateField, minDays) {
   const container = document.getElementById(containerId);
   container.innerHTML = '';
 
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() + startDays);
+  const today = new Date();
+  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth() + state.currentMonth, 1);
+  const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + state.currentMonth + 1, 0);
 
-  for (let i = 0; i < 35; i++) {
-    const date = new Date(startDate);
-    date.setDate(date.getDate() + i);
+  // Update month label
+  const monthLabel = document.getElementById('currentMonthLabel');
+  if (monthLabel) {
+    monthLabel.textContent = firstDayOfMonth.toLocaleDateString('en', { month: 'long', year: 'numeric' });
+  }
+
+  // Get first day of week (0 = Sunday)
+  const firstDayOfWeek = firstDayOfMonth.getDay();
+
+  // Add empty spaces for days before month starts
+  for (let i = 0; i < firstDayOfWeek; i++) {
+    const emptySpace = document.createElement('div');
+    emptySpace.className = 'parking-space disabled';
+    container.appendChild(emptySpace);
+  }
+
+  // Add days of the month
+  for (let day = 1; day <= lastDayOfMonth.getDate(); day++) {
+    const date = new Date(firstDayOfMonth.getFullYear(), firstDayOfMonth.getMonth(), day);
+    const dateStr = date.toISOString().split('T')[0];
+    const daysSinceToday = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
 
     const space = document.createElement('div');
     space.className = 'parking-space';
+    space.dataset.date = dateStr;
 
-    if (i >= totalDays) {
+    // Disable past dates and dates before minimum
+    if (daysSinceToday < minDays) {
       space.classList.add('disabled');
     }
 
-    const dateStr = date.toISOString().split('T')[0];
-    const dayNum = date.getDate();
-    const monthName = date.toLocaleDateString('en', { month: 'short' });
-
     space.innerHTML = `
-      <div class="space-number">${dayNum}</div>
-      <div class="space-label">${monthName}</div>
+      <div class="space-number">${day}</div>
+      <div class="space-label">${date.toLocaleDateString('en', { month: 'short' })}</div>
     `;
 
     if (!space.classList.contains('disabled')) {
       space.addEventListener('click', () => {
-        if (dateField === 'inDate' && state.outDate) {
-          const selectedDate = new Date(dateStr);
-          const outDateObj = new Date(state.outDate);
-          if (selectedDate < outDateObj) {
-            return; // Don't allow collection before drop-off
-          }
-        }
-
-        state[dateField] = dateStr;
-
-        // Animate car parking
-        const carId = dateField === 'outDate' ? 'car-dropoff' : 'car-collection';
-        const car = document.getElementById(carId);
-        const spaceRect = space.getBoundingClientRect();
-        const containerRect = container.getBoundingClientRect();
-
-        car.style.left = `${spaceRect.left - containerRect.left + spaceRect.width / 2}px`;
-        car.style.top = `${spaceRect.top - containerRect.top + spaceRect.height / 2}px`;
-        car.style.transform = 'translate(-50%, -50%)';
-        car.classList.add('parked');
-
-        // Mark as selected
-        container.querySelectorAll('.parking-space').forEach(s => s.classList.remove('selected'));
-        space.classList.add('selected');
-
-        setTimeout(() => {
-          car.classList.remove('parked');
-          nextStep();
-        }, 800);
+        const allSpaces = container.querySelectorAll('.parking-space');
+        state.carPosition = Array.from(allSpaces).indexOf(space);
+        updateCarPosition();
+        setTimeout(parkCar, 200);
       });
     }
 
     container.appendChild(space);
   }
+
+  // Fill remaining spaces to complete the grid
+  const totalSpaces = container.children.length;
+  const remainingSpaces = 35 - totalSpaces;
+  for (let i = 0; i < remainingSpaces; i++) {
+    const emptySpace = document.createElement('div');
+    emptySpace.className = 'parking-space disabled';
+    container.appendChild(emptySpace);
+  }
+
+  // Position car at first available space
+  setTimeout(() => updateCarPosition(), 100);
 }
 
 function showSummary() {

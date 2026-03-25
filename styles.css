@@ -136,6 +136,20 @@ body {
   animation: parkCar 0.6s ease;
 }
 
+.car.driving-to-lift {
+  z-index: 100;
+}
+
+.car.in-lift {
+  z-index: 100;
+  opacity: 0.8;
+  animation: carInLift 1.2s ease-in-out;
+}
+
+.car.exiting-lift {
+  z-index: 100;
+}
+
 @keyframes parkCar {
   0% {
     transform: translateX(-50%) scale(1);
@@ -145,6 +159,15 @@ body {
   }
   100% {
     transform: translateX(-50%) scale(1);
+  }
+}
+
+@keyframes carInLift {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.5;
   }
 }
 
@@ -227,6 +250,24 @@ body {
   border-radius: 15px;
   padding: 20px;
   box-shadow: 0 10px 30px rgba(0,0,0,.3);
+  position: relative;
+  transition: all 0.3s;
+}
+
+.lift-shaft.traveling {
+  animation: liftPulse 1.2s ease-in-out;
+  box-shadow: 0 10px 30px rgba(199, 76, 40, 0.5), 0 0 20px rgba(199, 76, 40, 0.3);
+}
+
+@keyframes liftPulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.02);
+    filter: brightness(1.1);
+  }
 }
 
 .lift-label {

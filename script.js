@@ -8,7 +8,9 @@ const state = {
   currentStep: 1,
   currentMonth: 0, // Months from today
   carPosition: 0, // Position in calendar grid (0-34)
-  activeCalendar: null
+  activeCalendar: null,
+  carInLift: false, // Track if car is in the lift
+  liftTraveling: false // Track if lift is moving
 };
 
 // Airport names
@@ -243,9 +245,9 @@ function generateCalendar(containerId, dateField, minDays = 1) {
   // Add floor button listeners
   wrapper.querySelectorAll('.lift-floor').forEach(floor => {
     floor.addEventListener('click', () => {
+      if (state.liftTraveling) return; // Don't allow clicks while traveling
+
       const floorNum = parseInt(floor.dataset.floor);
-      state.currentMonth = floorNum;
-      state.carPosition = 0;
 
       // Update selected floor
       wrapper.querySelectorAll('.lift-floor').forEach(f => f.classList.remove('selected'));
@@ -257,10 +259,8 @@ function generateCalendar(containerId, dateField, minDays = 1) {
         floorLabel.textContent = `Floor ${floorNum + 1}`;
       }
 
-      renderCalendar(containerId, dateField, minDays);
-
-      // Update car position after calendar renders
-      setTimeout(() => updateCarPosition(), 100);
+      // Animate car journey through lift
+      animateCarThroughLift(floorNum, containerId, dateField, minDays);
     });
   });
 }
@@ -339,6 +339,62 @@ function showSummary() {
 function updateProgress() {
   const progress = (state.currentStep / 6) * 100;
   document.getElementById('progressFill').style.width = `${progress}%`;
+}
+
+function animateCarThroughLift(targetFloor, containerId, dateField, minDays) {
+  state.liftTraveling = true;
+
+  const car = document.getElementById(state.activeCalendar.replace('-calendar', ''));
+  const liftShaft = document.querySelector('.lift-shaft');
+
+  if (!car || !liftShaft) {
+    // Fallback if elements not found
+    state.currentMonth = targetFloor;
+    state.carPosition = 0;
+    renderCalendar(containerId, dateField, minDays);
+    state.liftTraveling = false;
+    return;
+  }
+
+  // Step 1: Car drives into lift (move to center of lift shaft)
+  car.classList.add('driving-to-lift');
+  const liftRect = liftShaft.getBoundingClientRect();
+  const carRect = car.getBoundingClientRect();
+  const offsetX = liftRect.left + liftRect.width / 2 - carRect.left - carRect.width / 2;
+  const offsetY = liftRect.top + liftRect.height / 2 - carRect.top - carRect.height / 2;
+
+  car.style.transition = 'all 0.8s ease';
+  car.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(0.8)`;
+
+  // Step 2: After car enters lift, make lift "travel" with pulsing animation
+  setTimeout(() => {
+    car.classList.remove('driving-to-lift');
+    car.classList.add('in-lift');
+    liftShaft.classList.add('traveling');
+
+    // Step 3: After lift travels, update month and render calendar
+    setTimeout(() => {
+      state.currentMonth = targetFloor;
+      state.carPosition = 0;
+      renderCalendar(containerId, dateField, minDays);
+
+      // Step 4: Car drives out of lift onto calendar
+      setTimeout(() => {
+        liftShaft.classList.remove('traveling');
+        car.classList.remove('in-lift');
+        car.classList.add('exiting-lift');
+        car.style.transition = 'all 0.6s ease';
+        car.style.transform = '';
+
+        // Step 5: Position car at first available space
+        setTimeout(() => {
+          car.classList.remove('exiting-lift');
+          updateCarPosition();
+          state.liftTraveling = false;
+        }, 600);
+      }, 200);
+    }, 1200); // Lift travel time
+  }, 800); // Time to drive into lift
 }
 
 function submitSearch() {

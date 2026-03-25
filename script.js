@@ -252,9 +252,15 @@ function generateCalendar(containerId, dateField, minDays = 1) {
       floor.classList.add('selected');
 
       // Update indicator
-      document.getElementById('currentFloorLabel').textContent = `Floor ${floorNum + 1}`;
+      const floorLabel = wrapper.querySelector('#currentFloorLabel');
+      if (floorLabel) {
+        floorLabel.textContent = `Floor ${floorNum + 1}`;
+      }
 
       renderCalendar(containerId, dateField, minDays);
+
+      // Update car position after calendar renders
+      setTimeout(() => updateCarPosition(), 100);
     });
   });
 }
@@ -266,12 +272,6 @@ function renderCalendar(containerId, dateField, minDays) {
   const today = new Date();
   const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth() + state.currentMonth, 1);
   const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + state.currentMonth + 1, 0);
-
-  // Update month label
-  const monthLabel = document.getElementById('currentMonthLabel');
-  if (monthLabel) {
-    monthLabel.textContent = firstDayOfMonth.toLocaleDateString('en', { month: 'long', year: 'numeric' });
-  }
 
   // Get first day of week (0 = Sunday)
   const firstDayOfWeek = firstDayOfMonth.getDay();

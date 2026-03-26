@@ -100,6 +100,33 @@ function handleKeyboard(e) {
   updateCarPosition();
 }
 
+function showOutOfOrderSign() {
+  // Check if sign already exists
+  if (document.querySelector('.out-of-order-sign')) return;
+
+  const sign = document.createElement('div');
+  sign.className = 'out-of-order-sign';
+  sign.innerHTML = `
+    <div class="sign-content">
+      <div class="sign-icon">🚫</div>
+      <div class="sign-text">Out of Order!</div>
+      <div class="sign-subtext">Collection must be after drop-off</div>
+    </div>
+  `;
+
+  const container = document.getElementById(state.activeCalendar).parentElement;
+  container.appendChild(sign);
+
+  // Animate in
+  setTimeout(() => sign.classList.add('visible'), 10);
+
+  // Remove after 2 seconds
+  setTimeout(() => {
+    sign.classList.remove('visible');
+    setTimeout(() => sign.remove(), 300);
+  }, 2000);
+}
+
 function updateCarPosition() {
   const container = document.getElementById(state.activeCalendar);
   if (!container) return;
@@ -142,16 +169,20 @@ function parkCar() {
   const spaces = container.querySelectorAll('.parking-space');
   const targetSpace = spaces[state.carPosition];
 
-  if (!targetSpace || targetSpace.classList.contains('disabled')) return;
+  if (!targetSpace || targetSpace.classList.contains('disabled')) {
+    showOutOfOrderSign();
+    return;
+  }
 
   const dateField = state.activeCalendar === 'dropoff-calendar' ? 'outDate' : 'inDate';
   const dateStr = targetSpace.dataset.date;
 
   if (dateField === 'inDate' && state.outDate) {
-    const selectedDate = new Date(dateStr);
-    const outDateObj = new Date(state.outDate);
-    if (selectedDate < outDateObj) {
-      return; // Don't allow collection before drop-off
+    const selectedDate = new Date(dateStr + 'T00:00:00');
+    const outDateObj = new Date(state.outDate + 'T00:00:00');
+    if (selectedDate <= outDateObj) {
+      showOutOfOrderSign();
+      return; // Don't allow collection on or before drop-off
     }
   }
 
@@ -189,7 +220,18 @@ function nextStep() {
     document.getElementById('step-dropoff-time').classList.add('active');
   } else if (state.currentStep === 4) {
     document.getElementById('step-collection').classList.add('active');
-    state.currentMonth = 0;
+
+    // Calculate which month the collection should start on (same month or later than drop-off)
+    const today = new Date();
+    if (state.outDate) {
+      const outDate = new Date(state.outDate + 'T00:00:00');
+      const todayMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const outDateMonth = new Date(outDate.getFullYear(), outDate.getMonth(), 1);
+      state.currentMonth = Math.max(0, Math.floor((outDateMonth - todayMonth) / (1000 * 60 * 60 * 24 * 30)));
+    } else {
+      state.currentMonth = 0;
+    }
+
     state.carPosition = 0;
     state.activeCalendar = 'collection-calendar';
     const minDate = state.outDate ? new Date(state.outDate) : new Date();
@@ -221,14 +263,26 @@ function generateCalendar(containerId, dateField, minDays = 1) {
   // Generate 12 months (floors)
   const today = new Date();
   let floorsHTML = '';
+
+  // Calculate minimum month if this is collection calendar
+  let minMonth = 0;
+  if (dateField === 'inDate' && state.outDate) {
+    const outDate = new Date(state.outDate + 'T00:00:00');
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const outDateMonth = new Date(outDate.getFullYear(), outDate.getMonth(), 1);
+    minMonth = Math.floor((outDateMonth - todayStart) / (1000 * 60 * 60 * 24 * 30));
+  }
+
   for (let i = 0; i < 12; i++) {
     const monthDate = new Date(today.getFullYear(), today.getMonth() + i, 1);
     const monthName = monthDate.toLocaleDateString('en', { month: 'short', year: 'numeric' });
     const floorNumber = i + 1;
     const isSelected = i === state.currentMonth ? 'selected' : '';
+    const isDisabled = i < minMonth ? 'disabled' : '';
+    const outOfOrderLabel = i < minMonth ? '<span class="floor-badge">🚫</span>' : '';
     floorsHTML += `
-      <button class="lift-floor ${isSelected}" data-floor="${i}">
-        <span class="floor-number">${floorNumber}</span>
+      <button class="lift-floor ${isSelected} ${isDisabled}" data-floor="${i}" ${isDisabled ? 'disabled' : ''}>
+        <span class="floor-number">${floorNumber}${outOfOrderLabel}</span>
         <span class="floor-label">${monthName}</span>
       </button>
     `;

@@ -102,6 +102,8 @@ function handleKeyboard(e) {
 
 function updateCarPosition() {
   const container = document.getElementById(state.activeCalendar);
+  if (!container) return;
+
   const spaces = container.querySelectorAll('.parking-space');
   const targetSpace = spaces[state.carPosition];
 
@@ -109,6 +111,8 @@ function updateCarPosition() {
 
   const carId = state.activeCalendar === 'dropoff-calendar' ? 'car-dropoff' : 'car-collection';
   const car = document.getElementById(carId);
+
+  if (!car) return;
 
   // Remove highlight from all spaces
   spaces.forEach(s => s.classList.remove('highlighted'));
@@ -118,13 +122,19 @@ function updateCarPosition() {
     targetSpace.classList.add('highlighted');
   }
 
-  // Move car to space
-  const spaceRect = targetSpace.getBoundingClientRect();
-  const containerRect = container.getBoundingClientRect();
+  // Force reflow to ensure layout is calculated
+  container.offsetHeight;
 
-  car.style.left = `${spaceRect.left - containerRect.left + spaceRect.width / 2}px`;
-  car.style.top = `${spaceRect.top - containerRect.top + spaceRect.height / 2}px`;
+  // Move car to space using offsetLeft/offsetTop (more reliable than getBoundingClientRect)
+  const spaceLeft = targetSpace.offsetLeft;
+  const spaceTop = targetSpace.offsetTop;
+  const spaceWidth = targetSpace.offsetWidth;
+  const spaceHeight = targetSpace.offsetHeight;
+
+  car.style.left = `${spaceLeft + spaceWidth / 2}px`;
+  car.style.top = `${spaceTop + spaceHeight / 2}px`;
   car.style.transform = 'translate(-50%, -50%)';
+  car.style.transition = 'all 0.3s ease';
 }
 
 function parkCar() {
